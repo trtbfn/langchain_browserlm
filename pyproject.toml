@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "langchain-browserlm"
+version = "0.1.0"
+description = "Browser-automation backend for LangChain/LangGraph — drive web-hosted LLMs (Qwen, Kimi, …) as standard ChatOpenAI objects"
+requires-python = ">=3.9"
+dependencies = [
+    "langchain-openai>=0.1",
+    "langchain-core>=0.3",
+    "langchain-community>=0.4",
+    "langgraph>=0.2",
+    "playwright>=1.40",
+    "pydantic>=2.0",
+    "python-dotenv>=1.0",
+    "fastapi>=0.111",
+    "uvicorn>=0.29",
+    "mcp>=1.0",
+    "tiktoken>=0.7",
+]
+
+[tool.setuptools]
+package-dir = {"langchain_browserlm" = "."}
+packages = [
+    "langchain_browserlm",
+    "langchain_browserlm.adapters",
+    "langchain_browserlm.adapters.mcp",
+    "langchain_browserlm.core",
+    "langchain_browserlm.providers",
+    "langchain_browserlm.providers.qwen",
+    "langchain_browserlm.runtime",
+    "langchain_browserlm.web",
+]
