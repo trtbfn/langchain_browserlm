@@ -82,6 +82,7 @@ class BaseBrowserProvider(ABC):
         mode: str,
         env_path: "str | None",
         log_level: str,
+        temporary_chat: bool = True,
     ) -> list[str]:
         """Return the command list to launch this provider's OpenAI-compatible server.
 

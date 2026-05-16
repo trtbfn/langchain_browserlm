@@ -274,6 +274,8 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--host",     default="127.0.0.1",     help="Host to bind")
     p.add_argument("--env",      default=None,            help="Path to .env file with credentials")
     p.add_argument("--log-level", default="INFO",         help="DEBUG | INFO | WARNING | ERROR")
+    p.add_argument("--no-temporary-chat", action="store_true", default=False,
+                   help="Disable temporary chat mode (conversations will be saved)")
     return p.parse_args()
 
 
@@ -290,7 +292,7 @@ if __name__ == "__main__":
     # â”€â”€ Resolve provider factory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if args.provider == "qwen":
         from langchain_browserlm.providers.qwen.provider import QwenProvider
-        provider_factory = lambda: QwenProvider(model=args.model, mode=args.mode)
+        provider_factory = lambda: QwenProvider(model=args.model, mode=args.mode, temporary_chat=not args.no_temporary_chat)
     else:
         raise SystemExit(f"Unknown provider: {args.provider!r}. Supported: qwen")
 

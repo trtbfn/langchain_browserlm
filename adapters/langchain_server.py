@@ -81,6 +81,7 @@ class ChatLLM(ChatOpenAI):
         env_path: Optional[str | Path] = None,
         startup_timeout: float = 300.0,
         log_level: str = "INFO",
+        temporary_chat: bool = True,
         **kwargs: Any,
     ) -> None:
         port = _free_port()
@@ -90,6 +91,7 @@ class ChatLLM(ChatOpenAI):
             mode=mode,
             env_path=str(env_path) if env_path else None,
             log_level=log_level,
+            temporary_chat=temporary_chat,
         )
         _log.info("ChatLLM  provider=%s  model=%s  port=%d", provider.__name__, model, port)
         _servers.append(subprocess.Popen(cmd))

@@ -92,7 +92,7 @@ class QwenProvider(BaseBrowserProvider):
             pass
 
     @classmethod
-    def server_command(cls, port, model, mode, env_path, log_level) -> list[str]:
+    def server_command(cls, port, model, mode, env_path, log_level, temporary_chat=True) -> list[str]:
         import sys
         cmd = [
             sys.executable, "-m", "langchain_browserlm.server",
@@ -100,6 +100,8 @@ class QwenProvider(BaseBrowserProvider):
             "--port", str(port), "--host", "127.0.0.1",
             "--log-level", log_level,
         ]
+        if not temporary_chat:
+            cmd += ["--no-temporary-chat"]
         if env_path is not None:
             cmd += ["--env", env_path]
         return cmd
