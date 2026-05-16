@@ -110,7 +110,20 @@ def _messages_to_prompt(messages: List[BaseMessage], tools: list) -> str:
                 parts.append(f"ASSISTANT:\n```ans\n{msg.content}\n```")
 
         elif isinstance(msg, ToolMessage):
-            parts.append(f"TOOL_RESULT[{msg.tool_call_id}]: {msg.content}")
+            # LangChain >=0.3 + langchain.agents.create_agent serialises
+            # ToolMessage.content as a list of content blocks
+            # (e.g. [{"type":"text","text":"..."}]) instead of a plain string.
+            # Flatten it here so the prompt stays readable.
+            # When using ChatLLM (OpenAI-compat server) the server itself rejects
+            # this format with HTTP 422 before reaching this path — wrap the model
+            # in FlatteningLLM as shown in the README "Known limitations" section.
+            content = msg.content
+            if isinstance(content, list):
+                content = "\n".join(
+                    p["text"] if isinstance(p, dict) and p.get("type") == "text" else str(p)
+                    for p in content
+                )
+            parts.append(f"TOOL_RESULT[{msg.tool_call_id}]: {content}")
 
     return "\n\n".join(parts)
 

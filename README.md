@@ -257,6 +257,64 @@ print(result.content)
 
 ---
 
+## Known limitations
+
+### ToolMessage list-content (LangChain ≥ 0.3 + `create_agent`)
+
+LangChain ≥ 0.3 serialises `ToolMessage.content` as a list of content blocks
+(`[{"type": "text", "text": "..."}]`) when using `langchain.agents.create_agent`.
+The browser-automation server only accepts plain strings for message content and
+will reject this format with **HTTP 422**.
+
+**Workaround** — wrap the model in a thin `FlatteningLLM` shim before passing it
+to `create_agent`. The shim flattens list content back to a string on every call
+and forwards `bind_tools()` so tool-binding still works normally:
+
+```python
+from langchain_core.messages import ToolMessage
+
+def _flatten_tool_content(messages: list) -> list:
+    result = []
+    for msg in messages:
+        if isinstance(msg, ToolMessage) and isinstance(msg.content, list):
+            flat = "\n".join(
+                p["text"] if isinstance(p, dict) and p.get("type") == "text" else str(p)
+                for p in msg.content
+            )
+            msg = ToolMessage(content=flat, tool_call_id=msg.tool_call_id, name=msg.name)
+        result.append(msg)
+    return result
+
+
+class FlatteningLLM:
+    def __init__(self, llm):
+        self._llm = llm
+
+    def bind_tools(self, tools, **kwargs):
+        return FlatteningLLM(self._llm.bind_tools(tools, **kwargs))
+
+    def invoke(self, messages, config=None, **kwargs):
+        return self._llm.invoke(_flatten_tool_content(messages), config, **kwargs)
+
+    async def ainvoke(self, messages, config=None, **kwargs):
+        return await self._llm.ainvoke(_flatten_tool_content(messages), config, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._llm, name)
+
+
+# Usage
+from langchain.agents import create_agent
+
+llm = ChatLLM(QwenProvider, model="Qwen3.6-Plus", env_path=".env")
+agent = create_agent(model=FlatteningLLM(llm), tools=[...])
+```
+
+This limitation does **not** affect `create_react_agent` (from `langgraph.prebuilt`),
+which passes tool results as plain strings.
+
+---
+
 ## Adding a new provider
 
 Subclass `BaseBrowserProvider`, implement `server_command()` plus the three
