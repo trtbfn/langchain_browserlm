@@ -1,4 +1,4 @@
-﻿"""
+"""
 langchain_browserlm/web/navigation.py
 =========================
 Navigation and general page-readiness actions.
@@ -40,9 +40,9 @@ async def wait_for_chat_ready(page: Page) -> None:
 
 
 async def navigate_home(page: Page, temporary_chat: bool = False) -> None:
-    url = f”{QWEN_URL}/?temporary-chat=true” if temporary_chat else QWEN_URL
+    url = QWEN_URL + "/?temporary-chat=true" if temporary_chat else QWEN_URL
     try:
-        await page.goto(url, wait_until=”domcontentloaded”, timeout=30_000)
+        await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
     except Exception:
         pass
     await dismiss_dialogs(page)
@@ -50,10 +50,10 @@ async def navigate_home(page: Page, temporary_chat: bool = False) -> None:
 
 
 async def enable_temporary_chat(page: Page) -> None:
-    “””Navigate to the temporary-chat URL if not already active.”””
-    if “temporary-chat=true” not in page.url:
+    """Navigate to the temporary-chat URL if not already active."""
+    if "temporary-chat=true" not in page.url:
         await navigate_home(page, temporary_chat=True)
-        _log.info(“Temporary chat enabled via URL.”)
+        _log.info("Temporary chat enabled via URL.")
 
 
 async def click_new_chat(page: Page) -> None:
