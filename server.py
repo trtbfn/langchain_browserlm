@@ -307,7 +307,6 @@ if __name__ == "__main__":
     # â”€â”€ Start pool, then uvicorn â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     from langchain_browserlm.runtime.pool import BrowserPool
 
-    global _pool, _server_model
     _server_model = args.model
 
     async def _main():
