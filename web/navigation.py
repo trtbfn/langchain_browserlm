@@ -60,7 +60,7 @@ async def enable_temporary_chat(page: Page) -> None:
     """
     try:
         btn = page.locator(TEMPORARY_CHAT_BUTTON).first
-        await btn.wait_for(state="visible", timeout=8_000)
+        await btn.wait_for(state="visible", timeout=20_000)
         # Only click if not already active.
         classes = await btn.get_attribute("class") or ""
         if TEMPORARY_CHAT_ACTIVE_CLASS not in classes:
