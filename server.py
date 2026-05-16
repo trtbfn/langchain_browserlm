@@ -58,7 +58,7 @@ _log = logging.getLogger("langchain_browserlm.server")
 
 class _Message(BaseModel):
     role: str
-    content: str = ""
+    content: Optional[str] = ""
     tool_call_id: Optional[str] = None
     tool_calls: Optional[list] = None
     name: Optional[str] = None
@@ -152,7 +152,7 @@ def _build_prompt(messages: list[_Message], tools: list[_Tool] | None) -> str:
                 obj = {"name": fn.get("name", ""), "args": fn_args}
                 parts.append(f"ASSISTANT:\n```fn\n{json.dumps(obj)}\n```")
             else:
-                parts.append(f"ASSISTANT:\n```ans\n{msg.content}\n```")
+                parts.append(f"ASSISTANT:\n```ans\n{msg.content or ''}\n```")
 
         elif msg.role == "tool":
             parts.append(f"TOOL_RESULT[{msg.tool_call_id}]: {msg.content}")
