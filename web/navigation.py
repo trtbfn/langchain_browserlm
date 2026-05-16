@@ -17,8 +17,6 @@ from langchain_browserlm.web.selectors import (
     CHAT_TEXTAREA,
     COOKIE_DIALOG_BUTTONS,
     NEW_CHAT_BUTTON,
-    TEMPORARY_CHAT_ACTIVE_CLASS,
-    TEMPORARY_CHAT_BUTTON,
 )
 
 _log = logging.getLogger("langchain_browserlm.web.nav")
@@ -41,9 +39,10 @@ async def wait_for_chat_ready(page: Page) -> None:
     await page.wait_for_selector(CHAT_TEXTAREA, timeout=120_000)
 
 
-async def navigate_home(page: Page) -> None:
+async def navigate_home(page: Page, temporary_chat: bool = False) -> None:
+    url = f”{QWEN_URL}/?temporary-chat=true” if temporary_chat else QWEN_URL
     try:
-        await page.goto(QWEN_URL, wait_until="domcontentloaded", timeout=30_000)
+        await page.goto(url, wait_until=”domcontentloaded”, timeout=30_000)
     except Exception:
         pass
     await dismiss_dialogs(page)
@@ -51,26 +50,10 @@ async def navigate_home(page: Page) -> None:
 
 
 async def enable_temporary_chat(page: Page) -> None:
-    """Click the temporary-chat toggle if it is not already active.
-
-    Must be called after login and before model selection.  The button is in
-    the page header and disables server-side conversation history for this
-    session.  Safe to call on every worker startup â€” it is a no-op when the
-    mode is already on.
-    """
-    try:
-        btn = page.locator(TEMPORARY_CHAT_BUTTON).first
-        await btn.wait_for(state="visible", timeout=20_000)
-        # Only click if not already active.
-        classes = await btn.get_attribute("class") or ""
-        if TEMPORARY_CHAT_ACTIVE_CLASS not in classes:
-            await btn.click()
-            await asyncio.sleep(0.5)
-            _log.info("Temporary chat enabled.")
-        else:
-            _log.debug("Temporary chat already active â€” skipping click.")
-    except Exception as exc:
-        _log.warning("Could not enable temporary chat: %s", exc)
+    “””Navigate to the temporary-chat URL if not already active.”””
+    if “temporary-chat=true” not in page.url:
+        await navigate_home(page, temporary_chat=True)
+        _log.info(“Temporary chat enabled via URL.”)
 
 
 async def click_new_chat(page: Page) -> None:
