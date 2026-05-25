@@ -19,7 +19,7 @@ COOKIE_DIALOG_BUTTONS = (
 CHAT_TEXTAREA = "textarea.message-input-textarea"
 NEW_CHAT_BUTTON = "text=New Chat"
 
-LOGIN_BUTTON = ".auth-button-ui.login"
+LOGIN_BUTTON = "button.header-right-auth-button.brandprimary"
 EMAIL_INPUT = 'input[name="email"]'
 PASSWORD_INPUT = 'input[name="password"]'
 LOGIN_SUBMIT_BUTTON = 'button[type="submit"]'
@@ -39,8 +39,10 @@ UPLOAD_MENU_BUTTON = ".mode-select"
 UPLOAD_MENU = ".mode-select-dropdown"
 UPLOAD_ATTACHMENT_ITEM = ".mode-select-common-item"
 
+UPLOAD_SPINNER = ".circle-spinner"
+
 SEND_BUTTON = "button.send-button"
-COPY_RESPONSE_BUTTON = ".copy-response-button"
+COPY_RESPONSE_BUTTON = ".qwen-chat-package-comp-new-action-control-container-copy"
 
 # Temporary / private chat mode â€” disables server-side history storage.
 # Located in the page header; present once the user is logged in.

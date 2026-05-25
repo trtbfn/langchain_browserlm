@@ -18,6 +18,7 @@ from langchain_browserlm.web.selectors import (
     UPLOAD_ATTACHMENT_ITEM,
     UPLOAD_MENU,
     UPLOAD_MENU_BUTTON,
+    UPLOAD_SPINNER,
 )
 
 
@@ -61,6 +62,29 @@ async def upload_image(page: Page, image_path: Path | str) -> None:
 async def send_message_with_image(page: Page, text: str, image_path: Path | str) -> None:
     """Upload image_path then send text in the same message."""
     await upload_image(page, image_path)
+    await send_message(page, text)
+
+
+async def upload_video(page: Page, video_path: Path | str) -> None:
+    """Upload video_path via the plus dropdown and wait for the upload to finish."""
+    video_path = Path(video_path)
+    await page.locator(UPLOAD_MENU_BUTTON).click()
+    await asyncio.sleep(0.4)
+    async with page.expect_file_chooser(timeout=10_000) as fc_info:
+        await page.locator(UPLOAD_ATTACHMENT_ITEM).first.click()
+    fc = await fc_info.value
+    await fc.set_files(str(video_path))
+    await asyncio.sleep(1)
+    try:
+        await page.wait_for_selector(UPLOAD_SPINNER, timeout=10_000)
+        await page.wait_for_selector(UPLOAD_SPINNER, state="hidden", timeout=300_000)
+    except Exception:
+        pass
+
+
+async def send_message_with_video(page: Page, text: str, video_path: Path | str) -> None:
+    """Upload video_path then send text in the same message."""
+    await upload_video(page, video_path)
     await send_message(page, text)
 
 
@@ -130,7 +154,9 @@ class MessageComposer:
         self.page = page
 
     async def send(self, request: ChatRequest) -> None:
-        if request.image_path is not None:
+        if request.video_path is not None:
+            await send_message_with_video(self.page, request.text, request.video_path)
+        elif request.image_path is not None:
             await send_message_with_image(self.page, request.text, request.image_path)
         else:
             await send_message(self.page, request.text)

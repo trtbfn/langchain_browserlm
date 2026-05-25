@@ -18,6 +18,7 @@ class ChatRequest:
 
     text: str
     image_path: Path | None = None
+    video_path: Path | None = None
     request_id: str = field(default_factory=lambda: uuid4().hex[:8])
 
 

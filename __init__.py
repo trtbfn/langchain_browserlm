@@ -78,7 +78,7 @@ Adding a new provider:
 """
 
 # -- Sync notebook API --------------------------------------------------------
-from langchain_browserlm.adapters.notebook import qwen_send, qwen_send_with_image, qwen_start, qwen_stop
+from langchain_browserlm.adapters.notebook import qwen_send, qwen_send_with_image, qwen_send_with_video, qwen_start, qwen_stop
 
 # -- Async pool ---------------------------------------------------------------
 from langchain_browserlm.runtime.pool import QwenPool
@@ -93,6 +93,7 @@ __all__ = [
     "qwen_start",
     "qwen_send",
     "qwen_send_with_image",
+    "qwen_send_with_video",
     "qwen_stop",
     # Async pool
     "QwenPool",

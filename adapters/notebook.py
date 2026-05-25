@@ -137,15 +137,21 @@ def qwen_start(
     _log.info("Pool ready: %d window(s)", _pool.n_workers)
 
 
-def qwen_send(prompt: str, timeout: float = 900.0) -> str:
+def qwen_send(prompt: str, timeout: float = 900.0, request_id: str | None = None) -> str:
     """Send *prompt* to a free browser window and return the model's reply.
 
     Blocks until the full response has been received.
+
+    Args:
+        prompt:     The text prompt to send.
+        timeout:    Seconds to wait for the response.
+        request_id: Optional identifier to tag this request for tracking.
+                    Auto-generated if not provided.
     """
     if _pool is None:
         raise RuntimeError("Call qwen_start() first to open the browser windows.")
-    _log.debug("qwen_send: %d chars", len(prompt))
-    return _submit(_pool.send(prompt)).result(timeout=timeout)
+    _log.debug("qwen_send: %d chars  id=%s", len(prompt), request_id)
+    return _submit(_pool.send(prompt, request_id=request_id)).result(timeout=timeout)
 
 
 def qwen_send_with_image(
@@ -155,6 +161,28 @@ def qwen_send_with_image(
     if _pool is None:
         raise RuntimeError("Call qwen_start() first to open the browser windows.")
     return _submit(_pool.send_with_image(prompt, image_path)).result(timeout=timeout)
+
+
+def qwen_send_with_video(
+    prompt: str, video_path: str | Path, timeout: float = 900.0, request_id: str | None = None
+) -> str:
+    """Upload *video_path*, send *prompt*, and return the model's reply.
+
+    Blocks until the full response has been received.  The video is uploaded
+    via the browser file-chooser and the upload spinner is awaited before the
+    prompt is submitted.
+
+    Args:
+        prompt:     The text prompt to send alongside the video.
+        video_path: Local path to the .mp4 (or other video) file.
+        timeout:    Seconds to wait for the response (default 15 min).
+        request_id: Optional identifier for tracking.
+    """
+    if _pool is None:
+        raise RuntimeError("Call qwen_start() first to open the browser windows.")
+    return _submit(
+        _pool.send_with_video(prompt, video_path, request_id=request_id)
+    ).result(timeout=timeout)
 
 
 def qwen_stop(timeout: float = 30.0) -> None:

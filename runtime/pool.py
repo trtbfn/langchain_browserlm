@@ -100,17 +100,44 @@ class BrowserPool:
             await self._pw_ctx.__aexit__(*args)
         _log.info("Pool stopped.")
 
-    async def send(self, text: str) -> str:
+    async def send(self, text: str, request_id: Optional[str] = None) -> str:
         """Route text to the next free worker and return the reply."""
-        return await self.send_with_image(text, None)
+        return await self.send_with_image(text, None, request_id=request_id)
 
-    async def send_with_image(self, text: str, image_path: Optional[Path | str]) -> str:
+    async def send_with_image(
+        self,
+        text: str,
+        image_path: Optional[Path | str],
+        request_id: Optional[str] = None,
+    ) -> str:
         """Upload image_path, send text, and return the reply."""
         loop = asyncio.get_running_loop()
         future: asyncio.Future[str] = loop.create_future()
         resolved = Path(image_path) if image_path is not None else None
-        request = ChatRequest(text=text, image_path=resolved)
-        _log.debug("Request queued (%d chars)", len(text))
+        request = ChatRequest(
+            text=text,
+            image_path=resolved,
+            **({"request_id": request_id} if request_id is not None else {}),
+        )
+        _log.debug("Request queued id=%s (%d chars)", request.request_id, len(text))
+        await self._request_queue.put(QueuedChatRequest(request=request, future=future))
+        return await future
+
+    async def send_with_video(
+        self,
+        text: str,
+        video_path: Path | str,
+        request_id: Optional[str] = None,
+    ) -> str:
+        """Upload video_path, send text, and return the reply."""
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[str] = loop.create_future()
+        request = ChatRequest(
+            text=text,
+            video_path=Path(video_path),
+            **({"request_id": request_id} if request_id is not None else {}),
+        )
+        _log.debug("Request queued id=%s (%d chars, video)", request.request_id, len(text))
         await self._request_queue.put(QueuedChatRequest(request=request, future=future))
         return await future
 
