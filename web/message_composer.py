@@ -66,20 +66,49 @@ async def send_message_with_image(page: Page, text: str, image_path: Path | str)
 
 
 async def upload_video(page: Page, video_path: Path | str) -> None:
-    """Upload video_path via the plus dropdown and wait for the upload to finish."""
+    """Upload video_path (or audio-only mp4) via the plus dropdown."""
     video_path = Path(video_path)
-    await page.locator(UPLOAD_MENU_BUTTON).click()
-    await asyncio.sleep(0.4)
-    async with page.expect_file_chooser(timeout=10_000) as fc_info:
-        await page.locator(UPLOAD_ATTACHMENT_ITEM).first.click()
-    fc = await fc_info.value
-    await fc.set_files(str(video_path))
-    await asyncio.sleep(1)
-    try:
-        await page.wait_for_selector(UPLOAD_SPINNER, timeout=10_000)
-        await page.wait_for_selector(UPLOAD_SPINNER, state="hidden", timeout=300_000)
-    except Exception:
-        pass
+    for attempt in range(3):
+        try:
+            await page.keyboard.press("Escape")
+            await asyncio.sleep(0.2)
+        except Exception:
+            pass
+
+        await page.locator(UPLOAD_MENU_BUTTON).click()
+        await page.locator(UPLOAD_MENU).wait_for(state="visible", timeout=5_000)
+        async with page.expect_file_chooser(timeout=10_000) as fc_info:
+            await page.locator(UPLOAD_ATTACHMENT_ITEM).first.click()
+        fc = await fc_info.value
+        await fc.set_files(str(video_path))
+
+        # Video files trigger a transcoding spinner; audio-only files attach immediately.
+        try:
+            await page.wait_for_selector(UPLOAD_SPINNER, timeout=5_000)
+            await page.wait_for_selector(UPLOAD_SPINNER, state="hidden", timeout=300_000)
+            return
+        except Exception:
+            pass
+
+        # No spinner — check the DOM for any attached file preview.
+        await asyncio.sleep(1.5)
+        has_file = await page.evaluate("""
+            () => {
+                const inputs = document.querySelectorAll('input[type="file"]');
+                return Array.from(inputs).some(inp => inp.files && inp.files.length > 0);
+            }
+        """)
+        if has_file:
+            return
+
+        file_item = await page.evaluate("""
+            () => !!document.querySelector(
+                '[class*="file-item"], [class*="video"][class*="preview"], '
+                + '[class*="attach"][class*="thumb"], [class*="upload"][class*="preview"]'
+            )
+        """)
+        if file_item:
+            return
 
 
 async def send_message_with_video(page: Page, text: str, video_path: Path | str) -> None:
